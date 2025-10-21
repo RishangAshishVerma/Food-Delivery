@@ -50,6 +50,7 @@ export const signUp = async (req, res) => {
         });
     } catch (error) {
         return res.status(500).json(`error while creating the user ${error}`);
+
     }
 };
 
@@ -191,3 +192,62 @@ export const resetPassword = async (req, res) => {
 
     }
 }
+
+export const fireBaseSignUp = async (req, res) => {
+    try {
+        const { fullname, email, mobile, role } = req.body;
+
+        let user = await User.findOne({ email });
+        let isNewUser = false;
+
+        if (!user) {
+            user = await User.create({
+                fullname,
+                email,
+                mobile,
+                role
+            });
+            isNewUser = true;
+        }
+
+        const token = await gentoken(user.id);
+
+        res.cookie("token", token, {
+            secure: false, // set to true in production
+            sameSite: "strict",
+            maxAge: 7 * 24 * 60 * 60 * 1000,
+            httpOnly: true
+        });
+
+        return res.status(isNewUser ? 201 : 200).json({
+            message:"Login successful",
+            user
+        });
+
+    } catch (error) {
+        return res.status(500).json({ error: `Error while creating the user: ${error.message}` });
+    }
+};
+
+export const fireBaseSignIn = async (req, res) => {
+    try {
+        const { email } = req.body;
+        const user = await User.findOne({ email });
+        if (!user) {
+            return res.status(404).json({ error: "User not found, please signup first" });
+        }
+
+        const token = await gentoken(user.id);
+
+        res.cookie("token", token, {
+            secure: false,
+            sameSite: "strict",
+            maxAge: 7 * 24 * 60 * 60 * 1000,
+            httpOnly: true
+        });
+
+        return res.status(200).json({ message: "Signin successful", user });
+    } catch (error) {
+        return res.status(500).json({ error: `Error during signin: ${error.message}` });
+    }
+};

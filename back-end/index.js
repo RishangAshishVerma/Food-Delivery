@@ -3,6 +3,7 @@ import connectdb from "./utils/connectdb.js"
 import cookieParser from "cookie-parser"
 import authRoutes from "./routes/auth.routes.js"
 import cors from "cors";
+import userRouter from "./routes/user.routes.js";
 
 
 const PORT = process.env.PORT
@@ -18,6 +19,7 @@ app.use(cookieParser())
 
 
 app.use("/api/auth",authRoutes)
+app.use("/api/user",userRouter)
 
 app.listen(PORT, () => {
     connectdb()
