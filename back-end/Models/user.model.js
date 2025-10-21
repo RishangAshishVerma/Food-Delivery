@@ -28,6 +28,19 @@ const userSchema = new mongoose.Schema({
         require: true,
 
     },
+    
+    resetotp:{
+        type:String
+    },
+
+    isoptverified:{
+        type:Boolean,
+        default:false
+    },
+
+    otpexpires:{
+      type:Date  
+    },
 }, { timestamps: true })
 
 const User = mongoose.model("User",userSchema)
