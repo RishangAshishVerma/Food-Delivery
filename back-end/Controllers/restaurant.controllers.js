@@ -27,7 +27,7 @@ export const createrestaurant = async (req, res) => {
       owner: req.userId,
     });
 
-    await restaurant.populate("owner");
+    await restaurant.populate("owner items");
 
     return res.status(201).json({
       message: "Restaurant registered successfully with our platform FoodFleetGo",
@@ -78,7 +78,7 @@ export const editrestaurant = async (req, res) => {
         owner: req.userId,
       },
       { new: true }
-    ).populate("owner");
+    ).populate("owner items ");
 
     return res.status(200).json({
       message: "Restaurant details updated successfully",
@@ -95,7 +95,11 @@ export const editrestaurant = async (req, res) => {
 
 export const getmyrestaurant = async (req, res) => {
   try {
-    const restaurant = await Restaurant.findOne({ owner: req.userId }).populate("owner items")
+    const restaurant = await Restaurant.findOne({ owner: req.userId }).populate({
+      path: "items",
+      options: { sort: { updatedAt: -1 } }
+    });
+
     if (!restaurant) {
       return res.status(404).json({ message: "Restaurant not found!" });
     }

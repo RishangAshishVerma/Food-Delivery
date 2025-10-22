@@ -2,11 +2,15 @@ import uploadOnCloudinary from "../utils/cloudinary.js";
 import Restaurant from "../Models/Restaurant.model.js";
 import Menu from "../Models/Menu.model.js";
 
-export const createmenu = async (req, res) => {
+export const createMenu = async (req, res) => {
   try {
     const { name, category, price, type } = req.body;
 
-    const restaurantData = await Restaurant.findOne({ owner: req.userId });
+    const restaurantData = await Restaurant.findOne({ owner: req.userId }).populate({
+      path: "items",
+      options: { sort: { updatedAt: -1 } }
+    });
+
     if (!restaurantData) {
       return res.status(404).json({ message: "Restaurant not found!" });
     }
@@ -29,7 +33,12 @@ export const createmenu = async (req, res) => {
     restaurantData.items.push(menu._id);
     await restaurantData.save();
 
-    await menu.populate("restaurant");
+    await menu.populate(" owner").populate({
+      path: "items",
+      populate: { path: "restaurant" },
+      options: { sort: { updatedAt: -1 } }
+    });
+
 
     return res.status(201).json({
       message: "Menu item created successfully ",
@@ -43,7 +52,7 @@ export const createmenu = async (req, res) => {
   }
 }
 
-export const updatemenu = async (req, res) => {
+export const updateMenu = async (req, res) => {
   try {
     const { name, category, price, type } = req.body;
 
@@ -52,7 +61,7 @@ export const updatemenu = async (req, res) => {
       return res.status(404).json({ message: "Restaurant not found!" });
     }
 
-    const menuId = req.params.id; 
+    const menuId = req.params.id;
     const existingMenu = await Menu.findOne({ _id: menuId, restaurant: restaurantData._id });
     if (!existingMenu) {
       return res.status(404).json({ message: "Menu item not found!" });
@@ -76,7 +85,12 @@ export const updatemenu = async (req, res) => {
         image,
       },
       { new: true }
-    ).populate("restaurant");
+    ).populate({
+      path: "items",
+      populate: { path: "restaurant" },
+      options: { sort: { updatedAt: -1 } }
+    });
+
 
     return res.status(200).json({
       message: "Menu item updated successfully",
@@ -90,3 +104,18 @@ export const updatemenu = async (req, res) => {
   }
 };
 
+export const getMenuItemById = async (req, res) => {
+  try {
+    const menuItemId = req.params.id;
+    const item = await Menu.findById(menuItemId);
+
+    if (!item) {
+      return res.status(404).json({ message: "Menu item not found!" });
+    }
+
+    return res.status(200).json(item);
+  } catch (error) {
+    console.error("Error fetching menu item:", error);
+    return res.status(500).json({ message: "Server error", error: error.message });
+  }
+};
