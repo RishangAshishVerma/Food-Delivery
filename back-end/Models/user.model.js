@@ -14,7 +14,7 @@ const userSchema = new mongoose.Schema({
 
     password: {
         type: String,
-       
+
     },
 
     mobile: {
@@ -28,20 +28,26 @@ const userSchema = new mongoose.Schema({
         require: true,
 
     },
-    
-    resetotp:{
-        type:String
+
+    resetotp: {
+        type: String
     },
 
-    isoptverified:{
-        type:Boolean,
-        default:false
+    isoptverified: {
+        type: Boolean,
+        default: false
     },
 
-    otpexpires:{
-      type:Date  
+    otpexpires: {
+        type: Date
     },
+
+    isdeleted: {
+        type: Boolean,
+        default: false
+    },
+
 }, { timestamps: true })
 
-const User = mongoose.model("User",userSchema)
+const User = mongoose.model("User", userSchema)
 export default User

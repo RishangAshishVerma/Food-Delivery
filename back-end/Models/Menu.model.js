@@ -1,4 +1,5 @@
 import mongoose from "mongoose";
+import { type } from "os";
 
 const MenuSchema = new mongoose.Schema({
     name: {
@@ -40,7 +41,12 @@ const MenuSchema = new mongoose.Schema({
     type: {
         type: String,
          enum: ["Vegetarian", "Non-Vegetarian"],
-    }
+    },
+
+    isdeleted:{
+        type:Boolean,
+        default: false
+    }, 
 
 }, { timestamps: true });
 

@@ -42,18 +42,19 @@ export const createrestaurant = async (req, res) => {
   }
 };
 
-
 export const editrestaurant = async (req, res) => {
   try {
     const { name, state, address, city } = req.body;
 
-
     const restaurantData = await Restaurant.findOne({ owner: req.userId });
+
+    if (restaurantData.isdeleted) {
+      return res.status(400).json({ message: "This restaurant has been deleted" });
+    }
 
     if (!restaurantData) {
       return res.status(404).json({ message: "Restaurant not found!" });
     }
-
 
     let image = restaurantData.image;
 
@@ -64,8 +65,6 @@ export const editrestaurant = async (req, res) => {
         return res.status(400).json({ message: "Failed to upload image to Cloudinary!" });
       }
     }
-
-
 
     const updatedRestaurant = await Restaurant.findByIdAndUpdate(
       restaurantData._id,
@@ -103,9 +102,32 @@ export const getmyrestaurant = async (req, res) => {
     if (!restaurant) {
       return res.status(404).json({ message: "Restaurant not found!" });
     }
+
+    if (restaurant.isdeleted) {
+      return res.status(400).json({ message: "This restaurant  has been deleted" });
+    }
     return res.status(200).json(restaurant)
   } catch (error) {
     return res.status(500).json(`Error while getting the current restaurant: ${error}`);
 
   }
 }
+
+export const deleterestaurant = async (req, res) => {
+  try {
+    const restaurantId = req.params.id;
+
+    const restaurant = await Restaurant.findById(restaurantId);
+
+    if (!restaurant) {
+      return res.status(404).json({ message: "Menu not found" });
+    }
+
+    restaurant.isdeleted = true;
+    await restaurant.save();
+
+    return res.status(200).json({ message: "restaurant deleted successfully", restaurant });
+  } catch (error) {
+    return res.status(500).json({ message: `Error deleting restaurant: ${error}` });
+  }
+};

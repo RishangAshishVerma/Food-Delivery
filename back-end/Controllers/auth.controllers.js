@@ -7,6 +7,9 @@ export const signUp = async (req, res) => {
     try {
         const { fullname, email, password, mobile, role } = req.body;
         let user = await User.findOne({ email });
+        if (user.isdeleted) {
+            return res.status(400).json({ message: "This user account has been deleted." });
+        }
         if (user) {
             return res.status(409).json({ message: "User Already exist." });
         }
@@ -54,13 +57,15 @@ export const signUp = async (req, res) => {
     }
 };
 
-
 export const signIn = async (req, res) => {
     try {
         const { email, password } = req.body;
         const user = await User.findOne({ email });
         if (!user) {
             return res.status(404).json({ message: "User dose not exist." });
+        }
+        if (user.isdeleted) {
+            return res.status(400).json({ message: "This user account has been deleted." });
         }
         if (password.length < 6) {
             return res.status(400).json({ message: "password must at least 6 characters." });
@@ -89,7 +94,6 @@ export const signIn = async (req, res) => {
     }
 };
 
-
 export const signOut = async (req, res) => {
     try {
         res.clearCookie("token");
@@ -99,13 +103,15 @@ export const signOut = async (req, res) => {
     }
 };
 
-
 export const sendOtp = async (req, res) => {
     try {
         const { email } = req.body
         const user = await User.findOne({ email })
         if (!user) {
             return res.status(404).json({ message: "User dose not exist." });
+        }
+        if (user.isdeleted) {
+            return res.status(400).json({ message: "This user account has been deleted." });
         }
         const name = user.fullname
         const role = user.role
@@ -149,12 +155,16 @@ export const verifyOtp = async (req, res) => {
             return res.status(404).json({ message: "User does not exist." });
         }
 
+        if (user.isdeleted) {
+            return res.status(400).json({ message: "This user account has been deleted." });
+        }
+
         if (user.resetotp !== otp) {
             return res.status(400).json({ message: "Invalid OTP." });
         }
 
         if (user.otpexpires < Date.now()) {
-            return res.status(410).json({ message: "OTP has expired." }); // 410 Gone = resource no longer valid
+            return res.status(410).json({ message: "OTP has expired." });
         }
         user.isoptverified = true
         user.resetotp = undefined
@@ -175,6 +185,9 @@ export const resetPassword = async (req, res) => {
         const user = await User.findOne({ email })
         if (!user) {
             return res.status(404).json({ message: "User does not exist" });
+        }
+        if (user.isdeleted) {
+            return res.status(400).json({ message: "This user account has been deleted." });
         }
         if (!user.isoptverified) {
             return res.status(403).json({ message: "User is not verified" });
@@ -200,6 +213,10 @@ export const fireBaseSignUp = async (req, res) => {
         let user = await User.findOne({ email });
         let isNewUser = false;
 
+        if (user && user.isdeleted) {
+            return res.status(400).json({ message: "This user account has been deleted." });
+        }
+
         if (!user) {
             user = await User.create({
                 fullname,
@@ -220,7 +237,7 @@ export const fireBaseSignUp = async (req, res) => {
         });
 
         return res.status(isNewUser ? 201 : 200).json({
-            message:"Login successful",
+            message: "Login successful",
             user
         });
 
@@ -236,7 +253,9 @@ export const fireBaseSignIn = async (req, res) => {
         if (!user) {
             return res.status(404).json({ error: "User not found, please signup first" });
         }
-
+        if (user.isdeleted) {
+            return res.status(400).json({ message: "This user account has been deleted." });
+        }
         const token = await gentoken(user.id);
 
         res.cookie("token", token, {
@@ -251,3 +270,22 @@ export const fireBaseSignIn = async (req, res) => {
         return res.status(500).json({ error: `Error during signin: ${error.message}` });
     }
 };
+
+export const deleteUser = async (req, res) => {
+    try {
+        const userId = req.params.id;
+
+        const user = await User.findById(userId);
+
+        if (!user) {
+            return res.status(404).json({ message: "user not found" });
+        }
+
+        user.isdeleted = true;
+        await user.save();
+
+        return res.status(200).json({ message: "user deleted successfully", user });
+    } catch (error) {
+        return res.status(500).json({ message: `Error deleting user: ${error}` });
+    }
+}

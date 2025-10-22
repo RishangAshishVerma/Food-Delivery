@@ -67,6 +67,10 @@ export const updateMenu = async (req, res) => {
       return res.status(404).json({ message: "Menu item not found!" });
     }
 
+    if (existingMenu.isdeleted) {
+      return res.status(400).json({ message: "Cannot update a deleted menu item" });
+    }
+
     let image = existingMenu.image;
     if (req.file) {
       image = await uploadOnCloudinary(req.file.path);
@@ -107,15 +111,42 @@ export const updateMenu = async (req, res) => {
 export const getMenuItemById = async (req, res) => {
   try {
     const menuItemId = req.params.id;
+
+    if (!menuItemId) {
+      return res.status(404).json({ message: "Menu not found" });
+    }
     const item = await Menu.findById(menuItemId);
 
     if (!item) {
       return res.status(404).json({ message: "Menu item not found!" });
     }
 
+    if (item.isdeleted) {
+      return res.status(400).json({ message: "This menu item has been deleted" });
+    }
+
     return res.status(200).json(item);
   } catch (error) {
     console.error("Error fetching menu item:", error);
     return res.status(500).json({ message: "Server error", error: error.message });
+  }
+};
+
+export const deleteMenu = async (req, res) => {
+  try {
+    const menuId = req.params.id;
+
+    const menu = await Menu.findById(menuId);
+
+    if (!menu) {
+      return res.status(404).json({ message: "Menu not found" });
+    }
+
+    menu.isdeleted = true;
+    await menu.save();
+
+    return res.status(200).json({ message: "Menu deleted successfully", menu });
+  } catch (error) {
+    return res.status(500).json({ message: `Error deleting menu: ${error}` });
   }
 };
