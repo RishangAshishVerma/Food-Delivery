@@ -4,6 +4,8 @@ import cookieParser from "cookie-parser"
 import authRoutes from "./routes/auth.routes.js"
 import cors from "cors";
 import userRouter from "./routes/user.routes.js";
+import menuRouter from "./routes/menu.routes.js";
+import restaurantRouter from "./routes/restaurant.routes.js";
 
 
 const PORT = process.env.PORT
@@ -20,6 +22,8 @@ app.use(cookieParser())
 
 app.use("/api/auth",authRoutes)
 app.use("/api/user",userRouter)
+app.use("/api/restaurant",restaurantRouter)
+app.use("/api/menu",menuRouter)
 
 app.listen(PORT, () => {
     connectdb()

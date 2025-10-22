@@ -13,7 +13,7 @@ const MenuSchema = new mongoose.Schema({
         required: true 
     },
 
-    shop: {
+    restaurant: {
         type: mongoose.Schema.Types.ObjectId,
         ref: "shop"
     },
