@@ -26,7 +26,7 @@ export const createrestaurant = async (req, res) => {
       image,
       owner: req.userId,
     });
- 
+
     await restaurant.populate("owner");
 
     return res.status(201).json({
@@ -92,3 +92,16 @@ export const editrestaurant = async (req, res) => {
     });
   }
 };
+
+export const getmyrestaurant = async (req, res) => {
+  try {
+    const restaurant = await Restaurant.findOne({ owner: req.userId }).populate("owner items")
+    if (!restaurant) {
+      return res.status(404).json({ message: "Restaurant not found!" });
+    }
+    return res.status(200).json(restaurant)
+  } catch (error) {
+    return res.status(500).json(`Error while getting the current restaurant: ${error}`);
+
+  }
+}
