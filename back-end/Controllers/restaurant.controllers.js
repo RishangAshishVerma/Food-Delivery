@@ -2,42 +2,44 @@ import Restaurant from "../Models/Restaurant.model.js";
 import uploadOnCloudinary from "../utils/cloudinary.js";
 
 export const createrestaurant = async (req, res) => {
-    try {
-        const { name, state, address, city } = req.body;
+  try {
+    const { name, state, address, city } = req.body;
 
-        if (!name || !state || !address || !city) {
-            return res.status(400).json({ message: "All fields are required!" });
-        }
-
-        let image
-        if (req.file) {
-            const image = await uploadOnCloudinary(req.file.path);
-        }
-
-
-        const restaurant = await Restaurant.create({
-            name,
-            state,
-            address,
-            city,
-            image,
-            owner: req.userId,
-        });
-
-
-        await restaurant.populate("owner");
-
-
-        return res.status(201).json({
-            message: "Restaurant registered successfully with our platform FoodFleetGo ",
-            restaurant,
-        });
-    } catch (error) {
-        console.error("Error creating restaurant:", error);
-        return res.status(500).json({
-            message: `"Something went wrong while creating the restaurant"${error}`
-        });
+    if (!name || !state || !address || !city) {
+      return res.status(400).json({ message: "All fields are required!" });
     }
+
+    if (!req.file) {
+      return res.status(400).json({ message: "Image is required!" });
+    }
+
+    const image = await uploadOnCloudinary(req.file.path);
+    if (!image) {
+      return res.status(400).json({ message: "Failed to upload image to Cloudinary!" });
+    }
+
+    const restaurant = await Restaurant.create({
+      name,
+      state,
+      address,
+      city,
+      image,
+      owner: req.userId,
+    });
+ 
+    await restaurant.populate("owner");
+
+    return res.status(201).json({
+      message: "Restaurant registered successfully with our platform FoodFleetGo",
+      restaurant,
+    });
+  } catch (error) {
+    console.error("Error creating restaurant:", error);
+    return res.status(500).json({
+      message: "Something went wrong while creating the restaurant",
+      error: error.message,
+    });
+  }
 };
 
 
@@ -45,18 +47,24 @@ export const editrestaurant = async (req, res) => {
   try {
     const { name, state, address, city } = req.body;
 
-    
+
     const restaurantData = await Restaurant.findOne({ owner: req.userId });
 
     if (!restaurantData) {
       return res.status(404).json({ message: "Restaurant not found!" });
     }
 
-    
+
     let image = restaurantData.image;
+
     if (req.file) {
-      image = await uploadOnCloudinary(req.file);
+      image = await uploadOnCloudinary(req.file.path);
+
+      if (!image) {
+        return res.status(400).json({ message: "Failed to upload image to Cloudinary!" });
+      }
     }
+
 
 
     const updatedRestaurant = await Restaurant.findByIdAndUpdate(
@@ -69,7 +77,7 @@ export const editrestaurant = async (req, res) => {
         image,
         owner: req.userId,
       },
-      { new: true } 
+      { new: true }
     ).populate("owner");
 
     return res.status(200).json({

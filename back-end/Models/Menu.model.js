@@ -1,7 +1,5 @@
 import mongoose from "mongoose";
 
-const mongoose = require('mongoose');
-
 const MenuSchema = new mongoose.Schema({
     name: {
         type: String,
@@ -15,7 +13,7 @@ const MenuSchema = new mongoose.Schema({
 
     restaurant: {
         type: mongoose.Schema.Types.ObjectId,
-        ref: "shop"
+        ref: "Restaurant"
     },
 
     category: {
@@ -41,7 +39,7 @@ const MenuSchema = new mongoose.Schema({
 
     type: {
         type: String,
-        enum: ["veg", "non-veg"] 
+         enum: ["Vegetarian", "Non-Vegetarian"],
     }
 
 }, { timestamps: true });

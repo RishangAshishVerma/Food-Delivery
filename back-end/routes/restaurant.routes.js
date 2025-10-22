@@ -6,8 +6,8 @@ import { upload } from "../middlewares/multer.middleware.js"
 
 const restaurantRouter = express.Router()
 
-restaurantRouter.get("/create",isAuth,upload.single("image"),createrestaurant)
-restaurantRouter.get("/edit",isAuth,upload.single("image"),editrestaurant)
+restaurantRouter.post("/create",isAuth,upload.single("image"),createrestaurant)
+restaurantRouter.post("/edit",isAuth,upload.single("image"),editrestaurant)
 
 
 export default restaurantRouter
