@@ -150,3 +150,29 @@ export const deleteMenu = async (req, res) => {
     return res.status(500).json({ message: `Error deleting menu: ${error}` });
   }
 };
+
+export const getItemByCity = async (req, res) => {
+  try {
+    const { city } = req.params
+    if (!city) {
+      return res.status(400).json({ message: "city is required" })
+    }
+
+    const restaurant = await Restaurant.find({
+      city: { $regex: new RegExp(`^${city}$`, "i") }
+    }).populate('items')
+
+    if (!restaurant) {
+      return res.status(400).json({ message: "no resturant is required" })
+    }
+
+    const restaurantIds = restaurant.map((restaurant) => restaurant._id)
+
+    const menu = await Menu.find({ restaurant: { $in: restaurantIds } })
+    return res.status(200).json(menu)
+
+  } catch (error) {
+    return res.status(500).json({ message: `get item by city error: ${error}` });
+
+  }
+}

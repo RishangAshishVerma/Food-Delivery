@@ -131,3 +131,18 @@ export const deleterestaurant = async (req, res) => {
     return res.status(500).json({ message: `Error deleting restaurant: ${error}` });
   }
 };
+
+export const getrestaurantbycity = async (req,res) => {
+  try {
+    const {city} = req.params
+    const restaurant = await Restaurant.find({
+    city:{$regex:new RegExp(`^${city}$`,"i")}
+    }).populate(`items`)
+    if (!restaurant) {
+      return res.status(400).json({message:"restaurant not found"})
+    }
+    return res.status(200).json(restaurant)
+  } catch (error) {
+    return res.status(500).json({message:`"get shop bu city error" ${error}`})
+  }
+}
