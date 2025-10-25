@@ -1,32 +1,35 @@
-import express from "express"
-import connectdb from "./utils/connectdb.js"
-import cookieParser from "cookie-parser"
-import authRoutes from "./routes/auth.routes.js"
-import cors from "cors";
-import userRouter from "./routes/user.routes.js";
-import menuRouter from "./routes/menu.routes.js";
-import restaurantRouter from "./routes/restaurant.routes.js";
+  import express from "express"
+  import connectdb from "./utils/connectdb.js"
+  import cookieParser from "cookie-parser"
+  import authRoutes from "./routes/auth.routes.js"
+  import cors from "cors";
+  import userRouter from "./routes/user.routes.js";
+  import menuRouter from "./routes/menu.routes.js";
+  import restaurantRouter from "./routes/restaurant.routes.js";
+  import Order from "./Models/order.model.js";
+  import orderRouter from "./routes/order.routes.js";
 
 
-const PORT = process.env.PORT
+  const PORT = process.env.PORT
 
-const app = express()
-app.use(cors({
-  origin: "http://localhost:3000", // demo url 
-  credentials: true,              
-}));
+  const app = express()
+  app.use(cors({
+    origin: "http://localhost:3000", // demo url 
+    credentials: true,              
+  }));
 
-app.use(express.json())
-app.use(cookieParser())
+  app.use(express.json())
+  app.use(cookieParser())
 
 
-app.use("/api/auth",authRoutes)
-app.use("/api/user",userRouter)
-app.use("/api/restaurant",restaurantRouter)
-app.use("/api/menu",menuRouter)
+  app.use("/api/auth",authRoutes)
+  app.use("/api/user",userRouter)
+  app.use("/api/restaurant",restaurantRouter)
+  app.use("/api/menu",menuRouter)
+  app.use("/api/order",orderRouter)
 
-app.listen(PORT, () => {
-    connectdb()
-    console.log(`Server is running on port ${PORT}`);
+  app.listen(PORT, () => {
+      connectdb()
+      console.log(`Server is running on port ${PORT}`);
 
-})
+  })

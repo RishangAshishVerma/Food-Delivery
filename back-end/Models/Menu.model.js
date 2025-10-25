@@ -1,3 +1,4 @@
+import { count } from "console";
 import mongoose from "mongoose";
 import { type } from "os";
 
@@ -42,7 +43,12 @@ const MenuSchema = new mongoose.Schema({
         type: String,
          enum: ["Vegetarian", "Non-Vegetarian"],
     },
-
+          
+    rating:{
+        average:{type:Number,default:0},
+        count:{type:Number,default:0}
+    },
+    
     isdeleted:{
         type:Boolean,
         default: false
