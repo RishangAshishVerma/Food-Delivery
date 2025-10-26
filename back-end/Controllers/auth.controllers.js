@@ -7,9 +7,10 @@ export const signUp = async (req, res) => {
     try {
         const { fullname, email, password, mobile, role } = req.body;
         let user = await User.findOne({ email });
-        if (user.isdeleted) {
+        if (user?.isdeleted) {
             return res.status(400).json({ message: "This user account has been deleted." });
         }
+
         if (user) {
             return res.status(409).json({ message: "User Already exist." });
         }

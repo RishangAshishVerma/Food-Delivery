@@ -24,10 +24,11 @@ const orderSchema = new mongoose.Schema({
         required: true
     },
 
-    restaurantOrders: [{
+    restaurantOrders: {
         type: mongoose.Schema.Types.ObjectId,
-        ref: "restaurantOrder"
-    }]
+        ref: "restaurantOrder",
+        default: null
+    }
 }, { timestamps: true });
 
 const Order = mongoose.model("order", orderSchema);

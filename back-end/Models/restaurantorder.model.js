@@ -26,11 +26,22 @@ const restaurantOrderSchema = new mongoose.Schema({
         required: true
     },
 
-    status:{
-        type:String,
-        enum:["pending","preparning","out for delivery","delivered"],
-        default:"preparning"
-    }
+    Status: {
+        type: String,
+        enum: ["pending", "preparning", "out for delivery", "delivered"],
+        default: "preparning"
+    },
+
+    assignment: {
+        type: mongoose.Schema.Types.ObjectId,
+        ref: "DeliveryAssignment",
+    },
+
+    assignedDeliveryBoy: {
+    type: mongoose.Schema.Types.ObjectId,
+    ref: "User"
+}
+
 }, { timestamps: true });
 
 const restaurantorder = mongoose.model("restaurantOrder", restaurantOrderSchema);

@@ -24,7 +24,7 @@ const userSchema = new mongoose.Schema({
 
     role: {
         type: String,
-        enum: ["user", "owner", "deliver"],
+        enum: ["user", "owner", "deliveryboy "],
         require: true,
 
     },
@@ -46,8 +46,22 @@ const userSchema = new mongoose.Schema({
         type: Boolean,
         default: false
     },
-
+    location: {
+        type: {
+            type: String,
+            enum: [Point],
+            default: Point
+        },
+        coordinates: {
+            type: [Number],
+            default: [0, 0], //fri fro logintute , longitute
+        }
+    }
 }, { timestamps: true })
+
+
+userSchema.index({location:'2dsphere'})
+
 
 const User = mongoose.model("User", userSchema)
 export default User

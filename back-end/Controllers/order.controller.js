@@ -1,7 +1,10 @@
+import { STATES } from "mongoose";
 import Order from "../Models/order.model.js";
 import Restaurant from "../Models/Restaurant.model.js";
 import restaurantorder from "../Models/restaurantOrder.model.js";
+import restaurantorderitem from "../Models/restaurantorderitems.model.js";
 import User from "../Models/user.model.js"
+import DeliveryAssignment from "../Models/deliveryAssigmennt..model.js";
 
 
 export const placeOrder = async (req, res) => {
@@ -49,6 +52,9 @@ export const placeOrder = async (req, res) => {
             totalAmount,
             restaurantOrders: restaurantOrderIds
         });
+
+        await neworder.populate("restaurantorder.restaurantOrderItems", "name image price")
+        await neworder.populate("restaurantorder.restaurant", "name")
 
         return res.status(201).json({ message: "Order placed successfully", neworder });
 
@@ -100,6 +106,8 @@ export const getOwnerOrder = async (req, res) => {
                 ]
             });
 
+
+
         orders = orders.filter(order =>
             order.restaurantOrders.some(ro => ro.owner._id.toString() === req.userId)
         );
@@ -109,3 +117,95 @@ export const getOwnerOrder = async (req, res) => {
         return res.status(500).json({ message: `Get owner orders error: ${error.message}` });
     }
 };
+
+export const updateOrderStatus = async (params) => {
+    try {
+        const { orderId, restaurantId } = req.params
+        const { status } = req.body
+
+        const order = await Order.findById(orderId)
+
+        const restaurantOrder = order.restaurantOrders.find(o => o.restaurant == restaurantId)
+        if (!restaurantOrder) {
+            return res.status(400).json({ message: "resturant order not found" })
+        }
+
+        restaurantOrder.Status = status
+        await restaurantOrder.populate("restaurantorderitem.item", "name image price")
+
+        restaurantOrder.Status = status
+        let deliveryBoysPayload = []
+        if (status == "out for delivery" || !restaurantOrder.assignment) {
+            const { longitude, latitude } = order.deliveryAddress
+            const neardeliveryboy = await User.find({
+                role: "deliveryboy",
+                location: {
+                    $near: {
+                        $geometry: {
+                            type: "Point", coordinates: [Number(longitude),
+                            Number(latitude)]
+                        },
+                        $maxDistance: 10000
+                    }
+                }
+            })
+
+            const nearByIds = neardeliveryboy.map(b => b._id)
+            const busyIds = await DeliveryAssignment.find({
+                assignedTo: { $in: nearByIds },
+                status: { $nin: ["pending", "delivered"] }
+
+            }).distinct("assignedTo")
+
+            const busyIdsSet = new set(busyIds.map(id => String(id)))
+
+            const freedeliveryboy = neardeliveryboy.filter(b => !busyIdsSet.has(String(b._id)))
+
+            const candidates = freedeliveryboy.map(b => b._id)
+
+            if (!candidates.length === 0) {
+                await Order.save()
+                return res.status(400).json({ message: " status is update susscfuly but no delivery boy is free " })
+            }
+
+            const deliveryAssigment = await DeliveryAssignment.create({
+                order: order._id,
+                restaurant: restaurantOrder.restaurant,
+                restaurantOrderId: restaurantOrder._id,
+                broadcastedTo: candidates,
+                status: "broadcasted"
+            })
+
+            restaurantOrder.assignedDeliveryBoy = deliveryAssigment.assignedTo
+
+
+            restaurantOrder.assignment = deliveryAssigment._id
+            deliveryBoyPayload = freedeliveryboy.map(b => ({
+                id: b._id,
+                fullName: b.name,
+                longitude: b.location.coordinates?.[0],
+                latitude: b.location.coordinates?.[1],
+                mobile: b.mobile
+            }))
+
+        }
+
+        await restaurantOrder.save()
+        await order.save()
+
+
+        await order.populate("restaurantOrder.restaurant", "name")
+        await order.populate("restaurantOrder.assignedDeliveryBoy", "name email mobile")
+        const updateShopOrder = order.restaurantOrders.find(o => o.restaurant == restaurantId)
+
+        return res.status(200).json({
+            restaurantOrder: updateShopOrder,
+            assignedDeliveryBoy: updateShopOrder.assignedDeliveryBoy,
+            freeboy: deliveryBoysPayload,
+            assignment: updateShopOrder.assignment._id
+        })
+
+    } catch (error) {
+        return res.status(500).json({ message: `error while updateing the status ${error} ` })
+    }
+}

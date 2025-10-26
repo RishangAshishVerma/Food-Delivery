@@ -1,12 +1,12 @@
 import express from "express"
-import { getOwnerOrder, getUserOrders, placeOrder } from "../Controllers/order.controller.js"
+import { getOwnerOrder, getUserOrders, placeOrder, updateOrderStatus } from "../Controllers/order.controller.js"
 import isAuth from "../middlewares/isAuth.middleware.js"
 const orderRouter=express.Router()
 
 orderRouter.post("/place-order",isAuth,placeOrder)
 orderRouter.get("/user-order",isAuth,getUserOrders)
 orderRouter.get("/owner-order",isAuth,getOwnerOrder)
-
+orderRouter.post("/update-status/:orderId/:restaurantId",isAuth,updateOrderStatus)
 
 export default orderRouter
 
